@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle, #092b49 0%, #020812 65%, #000 100%);
+  color: #00cfff;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.container {
+  width: 100%;
+  padding: 25px;
+}
+
+h1 {
+  font-size: 32px;
+  letter-spacing: 5px;
+  text-shadow: 0 0 15px #00cfff;
+}
+
+.subtitle {
+  color: #8bdfff;
+  letter-spacing: 3px;
+  font-size: 11px;
+}
+
+.reactor {
+  width: 210px;
+  height: 210px;
+  margin: 45px auto;
+  border: 5px solid #00cfff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 20px #00cfff,
+              inset 0 0 25px #00cfff;
+  animation: pulse 3s infinite;
+}
+
+.inner {
+  width: 135px;
+  height: 135px;
+  border: 3px solid #8beaff;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00cfff, #06436b, #001321);
+  box-shadow: 0 0 35px #00cfff;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px #00cfff,
+                inset 0 0 20px #00cfff;
+  }
+  50% {
+    box-shadow: 0 0 40px #00cfff,
+                inset 0 0 35px #00cfff;
+  }
+}
+
+#status {
+  font-size: 14px;
+  letter-spacing: 3px;
+  margin: 25px 0;
+}
+
+#response {
+  color: #d5f5ff;
+  min-height: 50px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+button {
+  background: transparent;
+  color: #00cfff;
+  border: 2px solid #00cfff;
+  border-radius: 8px;
+  padding: 16px 25px;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  box-shadow: 0 0 15px #00cfff;
+  margin-top: 20px;
+}
+
+button:active {
+  background: #00cfff;
+  color: #001321;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.footer {
+  margin-top: 45px;
+  color: #477e99;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>J.A.R.V.I.S.</h1>
+  <div class="subtitle">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+
+  <div class="reactor">
+    <div class="inner"></div>
+  </div>
+
+  <div id="status">SISTEMA INICIALIZADO</div>
+
+  <div id="response">
+    Aguardando instruções, senhor.
+  </div>
+
+  <button id="listenBtn">
+    ATIVAR MICROFONE
+  </button>
+
+  <div class="footer">
+    PERSONAL AI SYSTEM
+  </div>
+
+</div>
+
+<script>
+const button = document.getElementById("listenBtn");
+const response = document.getElementById("response");
+const status = document.getElementById("status");
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+let reconhecimento = null;
+let ouvindo = false;
+
+function falar(texto) {
+  if (!("speechSynthesis" in window)) {
+    response.textContent = texto;
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const voz = new SpeechSynthesisUtterance(texto);
+  voz.lang = "pt-BR";
+  voz.rate = 1;
+  voz.pitch = 0.9;
+
+  window.speechSynthesis.speak(voz);
+}
+
+function responder(comando) {
+  if (
+    comando.includes("olá") ||
+    comando.includes("oi") ||
+    comando.includes("hello")
+  ) {
+    falar("Olá, senhor. Estou à sua disposição.");
+  }
+
+  else if (
+    comando.includes("seu nome") ||
+    comando.includes("quem é você")
+  ) {
+    falar("Meu nome é J.A.R.V.I.S., senhor.");
+  }
+
+  else if (comando.includes("tudo bem")) {
+    falar("Todos os sistemas estão funcionando.");
+  }
+
+  else if (comando.includes("obrigado")) {
+    falar("Sempre à disposição, senhor.");
+  }
+
+  else if (comando.includes("que horas")) {
+    const hora = new Date().toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    falar("Agora são " + hora + ", senhor.");
+  }
+
+  else {
+    falar("Comando recebido. Ainda estou aprendendo.");
+  }
+}
+
+if (!SpeechRecognition) {
+  status.textContent = "RECONHECIMENTO INDISPONÍVEL";
+  response.textContent =
+    "Este navegador não oferece reconhecimento de voz compatível.";
+  button.disabled = true;
+
+} else {
+
+  reconhecimento = new SpeechRecognition();
+
+  reconhecimento.lang = "pt-BR";
+  reconhecimento.continuous = false;
+  reconhecimento.interimResults = true;
+  reconhecimento.maxAlternatives = 1;
+
+  button.onclick = () => {
+
+    if (ouvindo) {
+      reconhecimento.stop();
+      return;
+    }
+
+    try {
+      response.textContent = "Preparando reconhecimento...";
+      status.textContent = "INICIANDO...";
+      reconhecimento.start();
+
+    } catch (erro) {
+      status.textContent = "ERRO AO INICIAR";
+      response.textContent =
+        "Detalhes: " + erro.message;
+    }
+  };
+
+  reconhecimento.onstart = () => {
+    ouvindo = true;
+    button.textContent = "PARAR MICROFONE";
+    status.textContent = "OUVINDO...";
+    response.textContent = "Pode falar, senhor.";
+  };
+
+  reconhecimento.onaudiostart = () => {
+    response.textContent = "Microfone conectado. Pode falar.";
+  };
+
+  reconhecimento.onspeechstart = () => {
+    response.textContent = "Detectei sua voz...";
+  };
+
+  reconhecimento.onresult = (event) => {
+    let comando = "";
+
+    for (
+      let i = event.resultIndex;
+      i < event.results.length;
+      i++
+    ) {
+      comando += event.results[i][0].transcript;
+    }
+
+    comando = comando.toLowerCase().trim();
+
+    response.textContent = "Você disse: " + comando;
+
+    const ultimo =
+      event.results[event.results.length - 1];
+
+    if (ultimo.isFinal) {
+      status.textContent = "COMANDO RECEBIDO";
+      responder(comando);
+    }
+  };
+
+  reconhecimento.onerror = (event) => {
+    status.textContent = "ERRO DE RECONHECIMENTO";
+    response.textContent = "Erro: " + event.error;
+  };
+
+  reconhecimento.onnomatch = () => {
+    response.textContent = "Não consegui entender sua fala.";
+  };
+
+  reconhecimento.onend = () => {
+    ouvindo = false;
+    button.textContent = "ATIVAR MICROFONE";
+
+    if (
+      status.textContent === "OUVINDO..." ||
+      status.textContent === "INICIANDO..."
+    ) {
+      status.textContent = "SISTEMA INICIALIZADO";
+      response.textContent = "Reconhecimento encerrado.";
+    }
+  };
+}
+</script>
+
+</body>
+</html>
